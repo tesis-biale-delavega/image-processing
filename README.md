@@ -1,6 +1,10 @@
 # Image Processing
 Local Python backend for drone image processing
 
+## Requirements
+* Docker
+* Python
+
 ## Installation Guide
 1. Create a virtual environment using venv
    ```
