@@ -16,7 +16,11 @@ Local Python backend for drone image processing
    ```
    pip install -r requirements.txt
    ```
-3. Run project
+   _If an error comes up while installing gdal, windows wheels are provided_
+   ```
+   pip install GDAL-3.4.3-cp39-cp39-win_amd64.whl
+   ```
+4. Run project
    ```
    export FLASK_APP=app.py (for windows use: setx FLASK_APP "app.py")
    flask run
