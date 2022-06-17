@@ -7,9 +7,13 @@ from pyodm import Node
 from pyodm.types import TaskStatus
 import cv2
 from utils.OdmUtils import get_rgb_config, get_multispectral_config
+from services.ProjectManagementService import create_project_dir
 from osgeo import gdal
 from concurrent.futures import ThreadPoolExecutor
 import zipfile
+from pathlib import Path
+import shutil
+import requests
 
 
 client = docker.from_env()
@@ -34,7 +38,25 @@ def odm_running():
     return False
 
 
-def start_odm(img_path):
+def odm_progress():
+    try:
+        tasks = requests.get('http://localhost:3000/task/list').json()
+        if len(tasks) != 0:
+            map = {}
+            for task in tasks:
+                info = requests.get('http://localhost:3000/task/' + task['uuid'] + '/info').json()
+                progress = info['progress']
+                status = info['status']['code']
+                map[task['uuid']] = {'progress': progress, 'status': status}
+            return map, 'ok'
+        return None, 'No tasks running'
+    except:
+        return None, 'No tasks running'
+
+
+def start_odm(img_path, project_name):
+    project_dir = create_project_dir(project_name)
+    print('Will save results at:', project_dir)
     multispectral = glob.glob(img_path + '/*.tif')
     rgb = glob.glob(img_path + '/*.jpg')
     names = normalize_multispectral_images(multispectral)
@@ -43,12 +65,13 @@ def start_odm(img_path):
     print(main_band)
 
     node = Node('localhost', 3000)
+
     run_tasks_in_parallel([
-        lambda: create_task(node, glob.glob(img_path + '/*.tif'), get_multispectral_config('RED'), img_path, 'multispectral'),
-        lambda: create_task(node, glob.glob(img_path + '/*.jpg'), get_rgb_config(), img_path, 'rgb')])
+        lambda: create_task(node, glob.glob(img_path + '/*.tif'), get_multispectral_config('RED'), 'multispectral', project_dir),
+        lambda: create_task(node, glob.glob(img_path + '/*.jpg'), get_rgb_config(), 'rgb', project_dir)])
 
 
-def create_task(node, imgs, config, img_path, img_type):
+def create_task(node, imgs, config, img_type, project_dir):
     print('Starting task for', img_type, 'images...')
     task = node.create_task(imgs, config)
     flag = True
@@ -72,7 +95,7 @@ def create_task(node, imgs, config, img_path, img_type):
             print('error:', exc)
 
     try:
-        final_dir = img_path + '/' + img_type
+        final_dir = project_dir + '/' + img_type
         if not os.path.exists(final_dir):
             os.makedirs(final_dir)
         zip_dir = task.download_zip(final_dir, parallel_downloads=16)
@@ -150,5 +173,17 @@ def run_tasks_in_parallel(tasks):
 
 
 def unzip_file(file, output):
-    with zipfile.ZipFile(file, 'r') as zip_ref:
+    p = Path(file)
+    zip_file = p.with_suffix('.zip')
+    print(zip_file)
+    p.rename(zip_file)
+    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(output)
+    os.remove(zip_file)
+
+
+def package_file(files_path, output):
+    shutil.make_archive(output, 'zip', files_path)
+    p = Path(output + '.zip')
+    print(p)
+    p.rename(p.with_suffix('.dip'))

@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
-from services.OdmService import startup, stop_odm, odm_running, start_odm, convert_single_channel_tif_to_png, unzip_file
-from services.CoordsService import avg_coords
+from flask import Flask, request, jsonify, Response
+from services.OdmService import startup, stop_odm, odm_running, start_odm, odm_progress
 from services.ImageClassifier import classify_images
-from services.IndexService import calculate_index, get_zone_above_threshold
+from services.IndexService import calculate_index
 import signal
 import sys
+from time import sleep
 
 app = Flask(__name__)
 startup()
@@ -26,6 +26,36 @@ def odm_running():
 @app.post('/analysis')
 def start_analysis():
     path = request.get_json()['path']
-    start_odm(path)
+    name = request.get_json()['name']
+    start_odm(path, name)
     return 'ok'
 
+
+@app.get('/progress')
+def progress():
+    def stream():
+        while True:
+            res, msg = odm_progress()
+            if res is not None:
+                yield str(res)
+            else:
+                yield '{\'error\':' + msg + '}'
+            sleep(5)
+
+    return Response(stream(), mimetype='application/json')
+
+
+@app.route('/classify')
+def classify():
+    path = request.get_json()['path']
+    return jsonify(classify_images(path))
+
+
+@app.post('/index')
+def index():
+    json = request.get_json()
+    response = calculate_index(
+        json['project_path'],
+        json['indexes'],
+        json['custom_indexes'])
+    return response
