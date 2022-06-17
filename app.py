@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, Response
 from services.OdmService import startup, stop_odm, odm_running, start_odm, odm_progress
 from services.ImageClassifier import classify_images
-from services.IndexService import calculate_index
+from services.IndexService import calculate_index, get_zone_above_threshold
 import signal
 import sys
 from time import sleep
@@ -59,3 +59,17 @@ def index():
         json['indexes'],
         json['custom_indexes'])
     return response
+
+
+@app.get('/threshold')
+def values_above_threshold():
+    response = get_zone_above_threshold(
+        request.get_json()['path'],
+        request.get_json()['threshold_max'],
+        request.get_json()['threshold_min'],
+        request.get_json()['out']
+    )
+    return {
+        'zone': response
+    }
+

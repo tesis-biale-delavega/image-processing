@@ -3,6 +3,13 @@ import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import os
+import enum
+
+
+class Index(enum.Enum):
+    ndvi = "(nir - red) / (nir + red)"
+    savi = "(1.5 * (nir - red)) / (nir + red + 0.5)"
+    ndwi = "(gre - nir) / (gre + nir)"
 
 
 def calculate_index(project_path, indexes, custom_indexes):
@@ -38,7 +45,7 @@ def calculate_index(project_path, indexes, custom_indexes):
         paths[custom_index['name']] = project_path + '/index_' + custom_index['name'] + '.png'
 
     for key in result:
-        create_heatmap(result[key], project_path + '/index_' + key + '.png')
+        create_heatmap(result[key], project_path + '/index_' + key + '.png', True, 4000)
         numpy.save(project_path + '/index_' + key + '.npy', result[key])
 
     return paths
@@ -71,12 +78,7 @@ def get_check(red=None, nir=None, reg=None, gre=None, blue=None):
 
 def get_index(index_name, check, red, nir, reg, gre, blue):
     try:
-        if index_name == 'ndvi':
-            return np.where(check, eval("(nir - red) / (nir + red)"), -999)
-        if index_name == 'savi':
-            return np.where(check, eval("(1.5 * (nir - red)) / (nir + red + 0.5)"), -999)
-        if index_name == 'ndwi':
-            return np.where(check, eval("(gre - nir) / (gre + nir)"), -999)
+        return np.where(check, eval(Index[index_name].value), -999)
     except (NameError, SyntaxError) as e:
         return None
 
@@ -88,23 +90,23 @@ def get_custom_index(custom_index, check, red, nir, reg, gre, blue):
         return None
 
 
-def create_heatmap(arr: np.ndarray, output):
+def create_heatmap(arr: np.ndarray, output, save, dpi):
     masked_data = np.ma.masked_where(arr == 0, arr)
     fig, ax = plt.subplots()
     ax.imshow(arr, cmap='gray', alpha=0)
     ax.imshow(masked_data, cmap='viridis', interpolation='none', vmax=1, vmin=-1)
 
     plt.axis('off')
-    # plt.show()
-    plt.savefig(output, bbox_inches='tight', dpi=5000, transparent=True)
+    if save:
+        plt.savefig(output, bbox_inches='tight', dpi=dpi, transparent=True)
+    else:
+        plt.show()
 
 
 def get_zone_above_threshold(src, threshold_max, threshold_min, out):
     array = numpy.load(src)
-    print(array.shape)
-    print(array)
     array[array >= threshold_max] = 0
     array[array <= threshold_min] = 0
     array[(array > threshold_min) & (array < threshold_max)] = 1
-    create_heatmap(array, out)
+    create_heatmap(array, out, True, 4000)
     return out
