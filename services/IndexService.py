@@ -12,7 +12,7 @@ class Index(enum.Enum):
     ndwi = "(gre - nir) / (gre + nir)"
 
 
-def calculate_index(project_path, indexes, custom_indexes):
+def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     red_path = project_path + '/odm_orthophoto_RED.tif'
     nir_path = project_path + '/odm_orthophoto_NIR.tif'
     reg_path = project_path + '/odm_orthophoto_REG.tif'
@@ -45,7 +45,7 @@ def calculate_index(project_path, indexes, custom_indexes):
         paths[custom_index['name']] = project_path + '/index_' + custom_index['name'] + '.png'
 
     for key in result:
-        create_heatmap(result[key], project_path + '/index_' + key + '.png', True, 4000)
+        create_heatmap(result[key], project_path + '/index_' + key + '.png', True, 4000, fig, ax)
         numpy.save(project_path + '/index_' + key + '.npy', result[key])
 
     return paths
@@ -90,9 +90,8 @@ def get_custom_index(custom_index, check, red, nir, reg, gre, blue):
         return None
 
 
-def create_heatmap(arr: np.ndarray, output, save, dpi):
+def create_heatmap(arr: np.ndarray, output, save, dpi, fig, ax):
     masked_data = np.ma.masked_where(arr == 0, arr)
-    fig, ax = plt.subplots()
     ax.imshow(arr, cmap='gray', alpha=0)
     ax.imshow(masked_data, cmap='viridis', interpolation='none', vmax=1, vmin=-1)
 
@@ -103,10 +102,10 @@ def create_heatmap(arr: np.ndarray, output, save, dpi):
         plt.show()
 
 
-def get_zone_above_threshold(src, threshold_max, threshold_min, out):
+def get_zone_above_threshold(src, threshold_max, threshold_min, out, fig, ax):
     array = numpy.load(src)
     array[array >= threshold_max] = 0
     array[array <= threshold_min] = 0
     array[(array > threshold_min) & (array < threshold_max)] = 1
-    create_heatmap(array, out, True, 4000)
+    create_heatmap(array, out, True, 4000, fig, ax)
     return out

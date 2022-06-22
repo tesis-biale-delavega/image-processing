@@ -58,7 +58,7 @@ def start_odm(img_path, project_name):
     project_dir = create_project_dir(project_name)
     print('Will save results at:', project_dir)
     multispectral = glob.glob(img_path + '/*.tif')
-    rgb = glob.glob(img_path + '/*.jpg')
+    rgb = glob.glob(img_path + '/*.JPG')
     names = normalize_multispectral_images(multispectral)
     normalize_rgb_images(rgb)
     main_band = names[0][:-4][-3:]

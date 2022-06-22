@@ -5,8 +5,11 @@ from services.IndexService import calculate_index, get_zone_above_threshold
 import signal
 import sys
 from time import sleep
+import matplotlib.pyplot as plt
+
 
 app = Flask(__name__)
+fig, ax = plt.subplots()
 startup()
 
 
@@ -57,7 +60,7 @@ def index():
     response = calculate_index(
         json['project_path'],
         json['indexes'],
-        json['custom_indexes'])
+        json['custom_indexes'], fig, ax)
     return response
 
 
@@ -67,7 +70,8 @@ def values_above_threshold():
         request.get_json()['path'],
         request.get_json()['threshold_max'],
         request.get_json()['threshold_min'],
-        request.get_json()['out']
+        request.get_json()['out'],
+        fig, ax
     )
     return {
         'zone': response
