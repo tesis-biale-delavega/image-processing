@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, Response
 from services.OdmService import startup, stop_odm, odm_running, start_odm, odm_progress
+from services.CoordsService import avg_coords
 from services.ImageClassifier import classify_images
 from services.IndexService import calculate_index, get_zone_above_threshold
 import signal
@@ -30,8 +31,11 @@ def odm_running():
 def start_analysis():
     path = request.get_json()['path']
     name = request.get_json()['name']
-    start_odm(path, name)
-    return 'ok'
+    output_path = start_odm(path, name)
+    return {
+        "output_path": output_path,
+        "avg_coords": avg_coords(path, output_path)
+    }
 
 
 @app.get('/progress')
