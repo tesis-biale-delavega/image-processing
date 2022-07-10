@@ -12,7 +12,6 @@ from osgeo import gdal
 from concurrent.futures import ThreadPoolExecutor
 import zipfile
 from pathlib import Path
-import shutil
 import requests
 
 
@@ -22,11 +21,11 @@ client = docker.from_env()
 def startup():
     containers = client.containers.list()
     if not any(container.attrs['Config']['Image'] == 'opendronemap/nodeodm' for container in containers):
-        subprocess.Popen(["docker", "run", "-ti", "-p", "3000:3000", "opendronemap/nodeodm"])
+        subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "opendronemap/nodeodm"])
 
 
 def stop_odm():
-    client.containers.prune()
+    client.containers.prune(filters={"label": "image-processing-odm"})
 
 
 def odm_running():
@@ -70,6 +69,8 @@ def start_odm(img_path, project_name):
         lambda: create_task(node, glob.glob(img_path + '/*.tif'), get_multispectral_config('RED'), 'multispectral', project_dir),
         lambda: create_task(node, glob.glob(img_path + '/*.jpg'), get_rgb_config(), 'rgb', project_dir)])
 
+    return project_dir
+
 
 def create_task(node, imgs, config, img_type, project_dir):
     print('Starting task for', img_type, 'images...')
@@ -87,7 +88,7 @@ def create_task(node, imgs, config, img_type, project_dir):
                 'processing_time': str(round(int(info.processing_time)/60000, 2)) + ' minutes',
             })
 
-            if info.status == TaskStatus.COMPLETED:
+            if info.status == TaskStatus.COMPLETED or TaskStatus.FAILED:
                 flag = False
 
             time.sleep(5)
@@ -180,10 +181,3 @@ def unzip_file(file, output):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(output)
     os.remove(zip_file)
-
-
-def package_file(files_path, output):
-    shutil.make_archive(output, 'zip', files_path)
-    p = Path(output + '.zip')
-    print(p)
-    p.rename(p.with_suffix('.dip'))
