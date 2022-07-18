@@ -6,7 +6,7 @@ def get_multispectral_config(main_band):
         'skip-report': True,  # Can be useful
         'max-concurrency': 8,
         'pc-quality': 'low',  # default is medium
-        'feature-quality': 'low',  # default is high
+        'feature-quality': 'medium',  # default is high
         'dem-decimation': 15,  # default is 1
         'radiometric-calibration': 'camera',
         'primary-band': main_band,

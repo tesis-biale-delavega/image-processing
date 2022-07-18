@@ -17,6 +17,8 @@ import requests
 
 client = docker.from_env()
 
+types = []
+
 
 def startup():
     containers = client.containers.list()
@@ -42,11 +44,12 @@ def odm_progress():
         tasks = requests.get('http://localhost:3000/task/list').json()
         if len(tasks) != 0:
             map = {}
-            for task in tasks:
+            for idx, task in enumerate(tasks):
                 info = requests.get('http://localhost:3000/task/' + task['uuid'] + '/info').json()
                 progress = info['progress']
                 status = info['status']['code']
-                map[task['uuid']] = {'progress': progress, 'status': status}
+                processing_time = info['processingTime']
+                map[types[idx]] = {'id': task['uuid'], 'progress': progress, 'status': status, 'processingTime': processing_time}
             return map, 'ok'
         return None, 'No tasks running'
     except:
@@ -61,20 +64,20 @@ def start_odm(img_path, project_name):
     names = normalize_multispectral_images(multispectral)
     normalize_rgb_images(rgb)
     main_band = names[0][:-4][-3:]
-    print(main_band)
-
     node = Node('localhost', 3000)
 
     run_tasks_in_parallel([
-        lambda: create_task(node, glob.glob(img_path + '/*.tif'), get_multispectral_config('RED'), 'multispectral', project_dir),
+        lambda: create_task(node, glob.glob(img_path + '/*.tif'), get_multispectral_config(main_band), 'multispectral', project_dir),
         lambda: create_task(node, glob.glob(img_path + '/*.jpg'), get_rgb_config(), 'rgb', project_dir)])
 
     return project_dir
 
 
 def create_task(node, imgs, config, img_type, project_dir):
-    print('Starting task for', img_type, 'images...')
+    print('Starting task for', img_type, 'images')
     task = node.create_task(imgs, config)
+    print('started', img_type)
+    types.append(img_type)
     flag = True
     while flag:
         try:
@@ -88,7 +91,8 @@ def create_task(node, imgs, config, img_type, project_dir):
                 'processing_time': str(round(int(info.processing_time)/60000, 2)) + ' minutes',
             })
 
-            if info.status == TaskStatus.COMPLETED or TaskStatus.FAILED:
+            if info.status == TaskStatus.COMPLETED or info.status == TaskStatus.FAILED:
+                print('out', info.status)
                 flag = False
 
             time.sleep(5)
@@ -105,6 +109,9 @@ def create_task(node, imgs, config, img_type, project_dir):
             convert_single_channel_tif_to_png(final_dir + '/odm_orthophoto')
     except Exception as exc:
         print('error saving results:', exc)
+
+    requests.post('http://localhost:3000/task/remove', {'uuid': task.uuid}).json() # TODO check if download is finished before removing the task
+    types.remove(img_type)
 
 
 def normalize_multispectral_images(imgs):
@@ -123,10 +130,8 @@ def normalize_multispectral_images(imgs):
 def clean_multispectral(imgs):
     ret = []
     for i, filename in enumerate(imgs):
-        print('RENAMING ', filename)
         new_filename = filename.replace('_', '')[:-4]
         final_name = new_filename[:-3] + '_' + new_filename[-3:] + '.tif'
-        print(final_name)
         os.rename(filename, final_name)
         ret.append(final_name)
 
@@ -135,15 +140,14 @@ def clean_multispectral(imgs):
 
 def normalize_rgb_images(imgs):
     for i, filename in enumerate(imgs):
-        final_name = filename[:-4] + '_RGB.jpg'
-        print(final_name)
-        os.rename(filename, final_name)
+        if filename[-8:] != '_RGB.jpg':
+            final_name = filename[:-4] + '_RGB.jpg'
+            os.rename(filename, final_name)
 
 
 def convert_single_channel_tif_to_png(img_path):
     multispectral = glob.glob(img_path + '/*.tif')
     for img in multispectral:
-        print(img)
         dataset = gdal.Open(img)
         image = dataset.ReadAsArray()
         if image.shape[2] == 6:
