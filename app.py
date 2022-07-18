@@ -1,3 +1,5 @@
+import os.path
+
 from flask import Flask, request, jsonify, Response
 from services.OdmService import startup, stop_odm, odm_running, start_odm, odm_progress
 from services.CoordsService import avg_coords
@@ -7,6 +9,8 @@ from services.ProjectManagementService import list_projects, package_project, ex
 import signal
 import sys
 from time import sleep
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
@@ -34,7 +38,8 @@ def start_analysis():
     name = request.get_json()['name']
     output_path = start_odm(path, name)
     return {
-        "output_path": output_path,
+        "project_path": output_path,
+        "orthophoto_path": os.path.join(output_path, 'rgb', 'odm_orthophoto', 'odm_orthophoto.png'),
         "avg_coords": avg_coords(path, output_path)
     }
 
