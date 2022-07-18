@@ -5,6 +5,8 @@ import numpy as np
 import os
 import enum
 
+orthophoto_path = '/multispectral/odm_orthophoto/odm_orthophoto'
+
 
 class Index(enum.Enum):
     ndvi = "(nir - red) / (nir + red)"
@@ -13,11 +15,11 @@ class Index(enum.Enum):
 
 
 def calculate_index(project_path, indexes, custom_indexes, fig, ax):
-    red_path = project_path + '/odm_orthophoto_RED.tif'
-    nir_path = project_path + '/odm_orthophoto_NIR.tif'
-    reg_path = project_path + '/odm_orthophoto_REG.tif'
-    gre_path = project_path + '/odm_orthophoto_GRE.tif'
-    blue_path = project_path + '/odm_orthophoto_BLU.tif'  # TODO check blue file
+    red_path = project_path + orthophoto_path + '_RED.tif'
+    nir_path = project_path + orthophoto_path + '_NIR.tif'
+    reg_path = project_path + orthophoto_path + '_REG.tif'
+    gre_path = project_path + orthophoto_path + '_GRE.tif'
+    blue_path = project_path + orthophoto_path + '_BLU.tif'  # TODO check blue file
 
     red_present, red_img = read_img(red_path)
     nir_present, nir_img = read_img(nir_path)
@@ -46,7 +48,6 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
 
     for key in result:
         create_heatmap(result[key], project_path + '/index_' + key + '.png', True, 4000, fig, ax)
-        numpy.save(project_path + '/index_' + key + '.npy', result[key])
 
     return paths
 
