@@ -3,15 +3,19 @@ import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import os
-import enum
+
+from utils.Index import Index
 
 orthophoto_path = '/multispectral/odm_orthophoto/odm_orthophoto'
 
 
-class Index(enum.Enum):
-    ndvi = "(nir - red) / (nir + red)"
-    savi = "(1.5 * (nir - red)) / (nir + red + 0.5)"
-    ndwi = "(gre - nir) / (gre + nir)"
+def check_images_missing(index_formula, red, nir, reg, gre, blue):
+    red_missing = "red" in index_formula and red is None
+    nir_missing = "nir" in index_formula and nir is None
+    reg_missing = "reg" in index_formula and reg is None
+    gre_missing = "gre" in index_formula and gre is None
+    blue_missing = "blue" in index_formula and blue is None
+    return red_missing or nir_missing or reg_missing or gre_missing or blue_missing
 
 
 def calculate_index(project_path, indexes, custom_indexes, fig, ax):
@@ -37,17 +41,31 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     result = {}
     paths = {}
     for index in indexes:
-        val = get_index(index, check, red, nir, reg, gre, blue)
-        result[index] = val
-        paths[index] = project_path + '/index_' + index + '.png'
+        if not check_images_missing(Index[index].value, red, nir, reg, gre, blue):
+            val = get_index(index, check, red, nir, reg, gre, blue)
+            result[index] = val
+            paths[index] = project_path + '/index_' + index + '.png'
+        else:
+            result[index] = None
+            paths[index] = None
 
     for custom_index in custom_indexes:
-        val = get_custom_index(custom_index['formula'], check, red, nir, reg, gre, blue)
-        result[custom_index['name']] = val
-        paths[custom_index['name']] = project_path + '/index_' + custom_index['name'] + '.png'
+        if not check_images_missing(custom_index['formula'], red, nir, reg, gre, blue):
+            val = get_custom_index(custom_index['formula'], check, red, nir, reg, gre, blue)
+            result[custom_index['name']] = val
+            paths[custom_index['name']] = project_path + '/index_' + custom_index['name'] + '.png'
+        else:
+            result[custom_index['name']] = None
+            paths[custom_index['name']] = None
 
     for key in result:
-        create_heatmap(result[key], project_path + '/index_' + key + '.png', True, 4000, fig, ax)
+        if result[key] is not None:
+            create_heatmap(result[key],
+                           project_path + '/index_' + key + '.png',
+                           True,
+                           4000,
+                           fig,
+                           ax)
 
     return paths
 
@@ -91,10 +109,10 @@ def get_custom_index(custom_index, check, red, nir, reg, gre, blue):
         return None
 
 
-def create_heatmap(arr: np.ndarray, output, save, dpi, fig, ax):
-    masked_data = np.ma.masked_where(arr == 0, arr)
+def create_heatmap(arr: np.ndarray, output, save, dpi, fig, ax, min_val=-1, max_val=1):
+    masked_data = np.ma.masked_where((arr == 0) | (arr == -999), arr)
     ax.imshow(arr, cmap='gray', alpha=0)
-    ax.imshow(masked_data, cmap='viridis', interpolation='none', vmax=1, vmin=-1)
+    ax.imshow(masked_data, cmap='RdYlGn', interpolation='none', vmin=min_val, vmax=max_val)
 
     plt.axis('off')
     if save:
