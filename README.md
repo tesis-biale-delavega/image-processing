@@ -25,8 +25,13 @@ Local Python backend for drone image processing
    ```
 4. Run project
    ```
+   for port 5000:
    export FLASK_APP=app.py (for windows use: setx FLASK_APP "app.py")
    flask run
+   
+   // or
+   for port 5001:
+   python app.py
    ```
 
 ## Common errors
