@@ -42,7 +42,7 @@ def start_analysis():
     return {
         "project_path": output_path,
         "orthophoto_path": os.path.join(output_path, 'rgb', 'odm_orthophoto', 'odm_orthophoto.png'),
-        "avg_coords": avg_coords(path, output_path)
+        "coords": avg_coords(path, output_path)
     }
 
 
