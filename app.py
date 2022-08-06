@@ -1,6 +1,7 @@
 import os.path
 
 from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
 from services.OdmService import startup, stop_odm, odm_running, start_odm, odm_progress
 from services.CoordsService import avg_coords
 from services.ImageClassifier import classify_images
@@ -15,6 +16,7 @@ import matplotlib.pyplot as plt
 
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 fig, ax = plt.subplots()
 startup()
 

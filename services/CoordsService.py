@@ -10,17 +10,31 @@ def avg_coords(img_paths, output_path):
     alt_sum = 0
     lat_sum = 0
     long_sum = 0
+    max_lat = 0
+    min_lat = 0
+    max_long = 0
+    min_long = 0
     for img in filt:  # if this does not work for other drones, can use ODM output json files
         tags = exifread.process_file(open(img, 'rb'))
         lat = str(tags['GPS GPSLatitude'])
         lat_list = lat.strip('][').split(', ')
         lat_list.append(str(tags['GPS GPSLatitudeRef']))
-        lat_sum = lat_sum + convert(lat_list)
+        current_lat = convert(lat_list)
+        if current_lat > max_lat:
+            max_lat = current_lat
+        if current_lat < min_lat:
+            min_lat = current_lat
+        lat_sum = lat_sum + current_lat
 
         long = str(tags['GPS GPSLongitude'])
         long_list = long.strip('][').split(', ')
         long_list.append(str(tags['GPS GPSLongitudeRef']))
-        long_sum = long_sum + convert(long_list)
+        current_long = convert(long_list)
+        long_sum = long_sum + current_long
+        if current_long > max_long:
+            max_long = current_long
+        if current_long < min_long:
+            min_long = current_long
 
         alt_sum = alt_sum + eval(str(tags['GPS GPSAltitude']))
         total_imgs = total_imgs + 1
@@ -29,9 +43,15 @@ def avg_coords(img_paths, output_path):
     avg_long = long_sum / total_imgs
     avg_alt = alt_sum / total_imgs
     data = {
-        'lat': avg_lat,
-        'long': avg_long,
-        'alt': avg_alt
+        'avg_lat': avg_lat,
+        'avg_long': avg_long,
+        'avg_alt': avg_alt,
+        'points': [
+            [min_long, min_lat],
+            [min_long, max_lat],
+            [max_long, min_lat],
+            [max_long, max_lat]
+        ]
     }
     with open(output_path + '/avg_coordinates.json', 'w') as f:
         json.dump(data, f)
