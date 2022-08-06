@@ -107,3 +107,7 @@ def compress_project():
 @app.post('/extract')
 def extract():
     return extract_project(request.get_json()['path'])
+
+
+if __name__ == '__main__':
+    app.run(host="localhost", port=5001, debug=True)
