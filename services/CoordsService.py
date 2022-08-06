@@ -6,6 +6,27 @@ import json
 def avg_coords(img_paths, output_path):
     multispectral = glob.glob(img_paths + '/*.tif')
     filt = list(filter(lambda x: x[:-4][-3:] == 'GRE', multispectral))
+    avg_lat, avg_long, avg_alt, points = calculate_points(filt)
+
+    rgb = glob.glob(img_paths + '/*.jpg')
+    avg_rgb_lat, avg_rgb_long, avg_rgb_alt, rgb_points = calculate_points(rgb)
+
+    data = {
+        'avg_lat': avg_lat,
+        'avg_long': avg_long,
+        'avg_alt': avg_alt,
+        'points': points,
+        'avg_rgb_lat': avg_rgb_lat,
+        'avg_rgb_long': avg_rgb_long,
+        'avg_rgb_alt': avg_rgb_alt,
+        'rgb_points': rgb_points
+    }
+    with open(output_path + '/avg_coordinates.json', 'w') as f:
+        json.dump(data, f)
+    return data
+
+
+def calculate_points(imgs):
     total_imgs = 0
     alt_sum = 0
     lat_sum = 0
@@ -14,7 +35,7 @@ def avg_coords(img_paths, output_path):
     min_lat = 9999
     max_long = -9999
     min_long = 9999
-    for img in filt:  # if this does not work for other drones, can use ODM output json files
+    for img in imgs:  # if this does not work for other drones, can use ODM output json files
         tags = exifread.process_file(open(img, 'rb'))
         lat = str(tags['GPS GPSLatitude'])
         lat_list = lat.strip('][').split(', ')
@@ -48,15 +69,7 @@ def avg_coords(img_paths, output_path):
         [max_long, min_lat],
         [max_long, max_lat]
     ]
-    data = {
-        'avg_lat': avg_lat,
-        'avg_long': avg_long,
-        'avg_alt': avg_alt,
-        'points': points
-    }
-    with open(output_path + '/avg_coordinates.json', 'w') as f:
-        json.dump(data, f)
-    return data
+    return avg_lat, avg_long, avg_alt, points
 
 
 def convert(tude):

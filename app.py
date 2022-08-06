@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 fig, ax = plt.subplots()
 startup()
 
@@ -30,7 +30,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 @app.route('/odm-running')
-def odm_running():
+def odm_is_running():
     return str(odm_running())
 
 
@@ -44,6 +44,11 @@ def start_analysis():
         "orthophoto_path": os.path.join(output_path, 'rgb', 'odm_orthophoto', 'odm_orthophoto.png'),
         "coords": avg_coords(path, output_path)
     }
+
+
+@app.post('/coords')
+def coords():
+    return avg_coords(request.get_json()['path'], request.get_json()['output_path'])
 
 
 @app.get('/progress')
