@@ -7,6 +7,7 @@ import os
 from utils.Index import Index
 
 orthophoto_path = '/multispectral/odm_orthophoto/odm_orthophoto'
+rgb_orthophoto_path = '/rgb/odm_orthophoto/odm_orthophoto'
 
 
 def check_images_missing(index_formula, red, nir, reg, gre, blue):
@@ -20,22 +21,25 @@ def check_images_missing(index_formula, red, nir, reg, gre, blue):
 
 def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     red_path = project_path + orthophoto_path + '_RED.tif'
+    red_alternative_path = project_path + rgb_orthophoto_path + '.tif'
     nir_path = project_path + orthophoto_path + '_NIR.tif'
     reg_path = project_path + orthophoto_path + '_REG.tif'
     gre_path = project_path + orthophoto_path + '_GRE.tif'
+    gre_alternative_path = project_path + rgb_orthophoto_path + '.tif'
     blue_path = project_path + orthophoto_path + '_BLU.tif'  # TODO check blue file
+    blue_alternative_path = project_path + rgb_orthophoto_path + '.tif'
 
-    red_present, red_img = read_img(red_path)
-    nir_present, nir_img = read_img(nir_path)
-    reg_present, reg_img = read_img(reg_path)
-    gre_present, gre_img = read_img(gre_path)
-    blue_present, blue_img = read_img(blue_path)
+    red_present, red_img, is_red_alternative = read_img(red_path, red_alternative_path)
+    nir_present, nir_img, is_nir_alternative = read_img(nir_path)
+    reg_present, reg_img, is_reg_alternative = read_img(reg_path)
+    gre_present, gre_img, is_gre_alternative = read_img(gre_path, gre_alternative_path)
+    blue_present, blue_img, is_blue_alternative = read_img(blue_path, blue_alternative_path)
 
-    red = convert_to_array(red_img, red_present)
+    red = convert_to_array(red_img, red_present, 2 if is_red_alternative else 0)
     nir = convert_to_array(nir_img, nir_present)
     reg = convert_to_array(reg_img, reg_present)
-    gre = convert_to_array(gre_img, gre_present)
-    blue = convert_to_array(blue_img, blue_present)
+    gre = convert_to_array(gre_img, gre_present, 1 if is_gre_alternative else 0)
+    blue = convert_to_array(blue_img, blue_present, 0 if is_blue_alternative else 0)
 
     check = np.logical_and.reduce(get_check(red, nir, reg, gre, blue))
     result = {}
@@ -70,14 +74,16 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     return paths
 
 
-def read_img(img):
+def read_img(img, alternative_path=None):
     if img is not None and os.path.exists(img):
-        return True, cv2.imread(img, cv2.IMREAD_UNCHANGED)
-    return False, None
+        return True, cv2.imread(img, cv2.IMREAD_UNCHANGED), False
+    if alternative_path is not None and os.path.exists(alternative_path):
+        return True, cv2.imread(alternative_path, cv2.IMREAD_UNCHANGED), True
+    return False, None, False
 
 
-def convert_to_array(img, present):
-    return np.array(img, dtype=float)[:, :, 0] * 256 if present else None
+def convert_to_array(img, present, index=0):
+    return np.array(img, dtype=float)[:, :, index] * 256 if present else None
 
 
 def get_check(red=None, nir=None, reg=None, gre=None, blue=None):
