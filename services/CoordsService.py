@@ -64,10 +64,10 @@ def calculate_points(imgs):
     avg_long = long_sum / total_imgs
     avg_alt = alt_sum / total_imgs
     points = [
-        [min_long, min_lat],
         [min_long, max_lat],
+        [max_long, max_lat],
         [max_long, min_lat],
-        [max_long, max_lat]
+        [min_long, min_lat],
     ]
     return avg_lat, avg_long, avg_alt, points
 
