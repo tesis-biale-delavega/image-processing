@@ -29,11 +29,13 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     blue_path = project_path + orthophoto_path + '_BLU.tif'  # TODO check blue file
     blue_alternative_path = project_path + rgb_orthophoto_path + '.tif'
 
-    red_present, red_img, is_red_alternative = read_img(red_path, red_alternative_path)
+    rgb_present_in_multispectral = check_rgb_images([red_path, gre_path, blue_path])
+
+    red_present, red_img, is_red_alternative = read_img(red_path, red_alternative_path, not rgb_present_in_multispectral)
     nir_present, nir_img, is_nir_alternative = read_img(nir_path)
     reg_present, reg_img, is_reg_alternative = read_img(reg_path)
-    gre_present, gre_img, is_gre_alternative = read_img(gre_path, gre_alternative_path)
-    blue_present, blue_img, is_blue_alternative = read_img(blue_path, blue_alternative_path)
+    gre_present, gre_img, is_gre_alternative = read_img(gre_path, gre_alternative_path, not rgb_present_in_multispectral)
+    blue_present, blue_img, is_blue_alternative = read_img(blue_path, blue_alternative_path, not rgb_present_in_multispectral)
 
     red = convert_to_array(red_img, red_present, 2 if is_red_alternative else 0)
     nir = convert_to_array(nir_img, nir_present)
@@ -81,10 +83,17 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     return paths
 
 
-def read_img(img, alternative_path=None):
+def check_rgb_images(paths):
+    all_rgb_present_in_multispectral = True
+    for image in paths:
+        all_rgb_present_in_multispectral = all_rgb_present_in_multispectral and os.path.exists(image)
+    return all_rgb_present_in_multispectral
+
+
+def read_img(img, alternative_path=None, skip_alternative=False):
     if img is not None and os.path.exists(img):
         return True, cv2.imread(img, cv2.IMREAD_UNCHANGED), False
-    if alternative_path is not None and os.path.exists(alternative_path):
+    if alternative_path is not None and os.path.exists(alternative_path) and not skip_alternative:
         return True, cv2.imread(alternative_path, cv2.IMREAD_UNCHANGED), True
     return False, None, False
 
