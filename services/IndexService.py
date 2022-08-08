@@ -140,5 +140,5 @@ def get_zone_above_threshold(src, threshold_max, threshold_min, fig, ax):
     array[array >= threshold_max] = 0
     array[array <= threshold_min] = 0
     array[(array > threshold_min) & (array < threshold_max)] = 1
-    create_heatmap(array, out, True, 4000, fig, ax)
+    create_heatmap(array, out, True, 4000, fig, ax, min_val=1, max_val=1)
     return out
