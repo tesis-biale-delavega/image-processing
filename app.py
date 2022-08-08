@@ -87,7 +87,6 @@ def values_above_threshold():
         request.get_json()['path'],
         request.get_json()['threshold_max'],
         request.get_json()['threshold_min'],
-        request.get_json()['out'],
         fig, ax
     )
     return {

@@ -48,7 +48,10 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
         if not check_images_missing(Index[index].value, red, nir, reg, gre, blue):
             val = get_index(index, check, red, nir, reg, gre, blue)
             result[index] = val
-            paths[index] = project_path + '/index_' + index + '.png'
+            paths[index] = {
+                'img': project_path + '/index_' + index + '.png',
+                'vector': project_path + '/index_' + index + '.npy'
+            }
         else:
             result[index] = None
             paths[index] = None
@@ -57,7 +60,10 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
         if not check_images_missing(custom_index['formula'], red, nir, reg, gre, blue):
             val = get_custom_index(custom_index['formula'], check, red, nir, reg, gre, blue)
             result[custom_index['name']] = val
-            paths[custom_index['name']] = project_path + '/index_' + custom_index['name'] + '.png'
+            paths[custom_index['name']] = {
+                    'img': project_path + '/index_' + custom_index['name'] + '.png',
+                    'vector': project_path + '/index_' + custom_index['name'] + '.npy'
+                }
         else:
             result[custom_index['name']] = None
             paths[custom_index['name']] = None
@@ -70,6 +76,7 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
                            4000,
                            fig,
                            ax)
+            numpy.save(project_path + '/index_' + key + '.npy', result[key])
 
     return paths
 
@@ -127,7 +134,8 @@ def create_heatmap(arr: np.ndarray, output, save, dpi, fig, ax, min_val=-1, max_
         plt.show()
 
 
-def get_zone_above_threshold(src, threshold_max, threshold_min, out, fig, ax):
+def get_zone_above_threshold(src, threshold_max, threshold_min, fig, ax):
+    out = src[:-3] + '_threshold_' + str(threshold_min) + '_' + str(threshold_max) + '.png'
     array = numpy.load(src)
     array[array >= threshold_max] = 0
     array[array <= threshold_min] = 0
