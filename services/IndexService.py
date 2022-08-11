@@ -169,6 +169,7 @@ def create_heatmap(arr: np.ndarray, output, save, dpi, fig, ax, min_val=-1, max_
         plt.savefig(output, bbox_inches='tight', dpi=dpi, transparent=True)
     else:
         plt.show()
+    plt.cla()
 
 
 def get_zone_above_threshold(src, threshold_max, threshold_min, fig, ax):
