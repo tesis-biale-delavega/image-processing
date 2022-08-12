@@ -32,7 +32,7 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     reg_path = project_path + orthophoto_path + '_REG.tif'
     gre_path = project_path + orthophoto_path + '_GRE.tif'
     gre_alternative_path = project_path + rgb_orthophoto_path + '.tif'
-    blue_path = project_path + orthophoto_path + '_BLU.tif'  # TODO check blue file
+    blue_path = project_path + orthophoto_path + '_BLU.tif'
     blue_alternative_path = project_path + rgb_orthophoto_path + '.tif'
 
     any_all_rgb_index = list(map(only_rgb_index, map(lambda x: Index[x].value, indexes))) + list(map(only_rgb_index, map(lambda x: x['formula'], custom_indexes)))

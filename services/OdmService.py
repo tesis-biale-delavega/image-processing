@@ -8,6 +8,7 @@ from pyodm.types import TaskStatus
 import cv2
 from utils.OdmUtils import get_rgb_config, get_multispectral_config
 from services.ProjectManagementService import create_project_dir
+from services.ImageClassifier import classify_images
 from osgeo import gdal
 from concurrent.futures import ThreadPoolExecutor
 import zipfile
@@ -58,11 +59,10 @@ def odm_progress():
 
 def start_odm(img_path, project_name):
     project_dir = create_project_dir(project_name)
+    images_map = classify_images(img_path)
     print('Will save results at:', project_dir)
-    multispectral = glob.glob(img_path + '/*.tif')
-    rgb = glob.glob(img_path + '/*.JPG')
-    names = normalize_multispectral_images(multispectral)
-    normalize_rgb_images(rgb)
+    names = normalize_multispectral_images(images_map)
+    normalize_rgb_images(images_map['rgb_images'])
     main_band = names[0][:-4][-3:]
     node = Node('localhost', 3000)
 
@@ -115,25 +115,30 @@ def create_task(node, imgs, config, img_type, project_dir):
 
 
 def normalize_multispectral_images(imgs):
-    imgs.sort(key=lambda x: x[:-4][-3:])
-    green = list(filter(lambda x: x[:-4][-3:] == 'GRE', imgs))
-    nir = list(filter(lambda x: x[:-4][-3:] == 'NIR', imgs))
-    red = list(filter(lambda x: x[:-4][-3:] == 'RED', imgs))
-    reg = list(filter(lambda x: x[:-4][-3:] == 'REG', imgs))
-    ret = clean_multispectral(green)
-    clean_multispectral(nir)
-    clean_multispectral(red)
-    clean_multispectral(reg)
+    green = imgs['gre_images']
+    nir = imgs['nir_images']
+    red = imgs['red_images']
+    reg = imgs['reg_images']
+    blue = imgs['blu_images']
+    ret = clean_multispectral(green, 'GRE')
+    clean_multispectral(nir, 'NIR')
+    clean_multispectral(red, 'RED')
+    clean_multispectral(reg, 'REG')
+    clean_multispectral(blue, 'BLUE')
     return ret
 
 
-def clean_multispectral(imgs):
+def clean_multispectral(imgs, band):
     ret = []
     for i, filename in enumerate(imgs):
-        new_filename = filename.replace('_', '')[:-4]
-        final_name = new_filename[:-3] + '_' + new_filename[-3:] + '.tif'
-        os.rename(filename, final_name)
-        ret.append(final_name)
+        if (band == 'BLUE' and filename[-9:] != '_' + band + '.tif') or (band != 'BLUE' and filename[-8:] != '_' + band + '.tif'):
+            new_filename = filename.replace('_', '')
+            final_name = new_filename[:-4] + '_' + band + '.tif'
+            os.rename(filename, final_name)
+            print('Renaming ', filename, 'to', final_name)
+            ret.append(final_name)
+        else:
+            ret.append(filename)
 
     return ret
 
@@ -150,7 +155,7 @@ def convert_single_channel_tif_to_png(img_path):
     for img in multispectral:
         dataset = gdal.Open(img)
         image = dataset.ReadAsArray()
-        if image.shape[2] == 6:
+        if image.shape[0] == 6:
             green = cv2.merge([image[0], image[0], image[0], image[5]])
             red = cv2.merge([image[1], image[1], image[1], image[5]])
             reg = cv2.merge([image[2], image[2], image[2], image[5]])
