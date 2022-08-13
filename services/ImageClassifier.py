@@ -42,7 +42,7 @@ def classify_images(src):
                 if elem == 'Red':
                     red_images.append(image)
                     continue
-        except xml.etree.ElementTree.ParseError as e:
+        except Exception as e:
             # if xmp info cannot be parsed check EXIF info
             tags = exifread.process_file(open(image, 'rb'))
             try:
