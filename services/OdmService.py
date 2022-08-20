@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 import zipfile
 from pathlib import Path
 import requests
+import GPUtil
 
 
 client = docker.from_env()
@@ -23,8 +24,11 @@ types = []
 
 def startup():
     containers = client.containers.list()
-    if not any(container.attrs['Config']['Image'] == 'opendronemap/nodeodm' for container in containers):
-        subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "opendronemap/nodeodm"])
+    if not any((container.attrs['Config']['Image'] == 'opendronemap/nodeodm' or container.attrs['Config']['Image'] == 'opendronemap/nodeodm:gpu') for container in containers):
+        if len(GPUtil.getGPUs()) > 0:
+            subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "--gpus", "all", "opendronemap/nodeodm:gpu"])
+        else:
+            subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "opendronemap/nodeodm"])
 
 
 def stop_odm():
@@ -61,9 +65,9 @@ def start_odm(img_path, project_name):
     project_dir = create_project_dir(project_name)
     images_map = classify_images(img_path)
     print('Will save results at:', project_dir)
-    names = normalize_multispectral_images(images_map)
+    normalize_multispectral_images(images_map)
     normalize_rgb_images(images_map['rgb_images'])
-    main_band = names[0][:-4][-3:]
+    main_band = 'Green'
     node = Node('localhost', 3000)
 
     run_tasks_in_parallel([

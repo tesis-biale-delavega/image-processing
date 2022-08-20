@@ -1,7 +1,6 @@
 import glob
 import exifread
 import xml.etree.ElementTree as ET
-import xml
 
 
 def classify_images(src):
