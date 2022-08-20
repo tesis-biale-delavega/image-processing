@@ -7,3 +7,4 @@ pyodm~=1.5.9
 docker~=5.0.3
 requests~=2.25.1
 flask-cors~=3.0.10
+GPUtil~=1.4.0
