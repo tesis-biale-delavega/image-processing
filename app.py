@@ -81,7 +81,7 @@ def index():
     return response
 
 
-@app.get('/threshold')
+@app.post('/threshold')
 def values_above_threshold():
     response = get_zone_above_threshold(
         request.get_json()['path'],
