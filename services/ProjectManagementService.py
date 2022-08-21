@@ -21,32 +21,35 @@ def list_projects():
     project_dirs = [a for a in dirs if '_' in a]
     projects = []
     for itm in project_dirs:
-        ortho_path = os.path.join(os.getcwd(), itm, 'rgb', 'odm_orthophoto', 'odm_orthophoto.png')
-        ortho_path = ortho_path if os.path.exists(ortho_path) else None
+        try:
+            ortho_path = os.path.join(os.getcwd(), itm, 'rgb', 'odm_orthophoto', 'odm_orthophoto.png')
+            ortho_path = ortho_path if os.path.exists(ortho_path) else None
 
-        data = None
-        if os.path.exists(itm + '/avg_coordinates.json'):
-            with open(itm + '/avg_coordinates.json') as json_file:
-                data = json.load(json_file)
+            data = None
+            if os.path.exists(itm + '/avg_coordinates.json'):
+                with open(itm + '/avg_coordinates.json') as json_file:
+                    data = json.load(json_file)
 
-        index_data = []
-        for img in glob.glob(itm + "/*.png"):
-            img_parts = img.split("_")
-            index_data.append({
-                'path': os.path.join(os.getcwd(), img),
-                'index': img_parts[len(img_parts) - 1][:-4],
-                'vector': os.path.join(os.getcwd(), img[:-3] + 'npy')
+            index_data = []
+            for img in glob.glob(itm + "/*.png"):
+                img_parts = img.split("_")
+                index_data.append({
+                    'path': os.path.join(os.getcwd(), img),
+                    'index': img_parts[len(img_parts) - 1][:-4],
+                    'vector': os.path.join(os.getcwd(), img[:-3] + 'npy')
+                })
+
+            parts = itm.split("_")
+            projects.append({
+                'name': parts[0],
+                'date': datetime.strptime(parts[1], "%d%m%Y%H%M%S").timestamp(),
+                'path': os.path.join(os.getcwd(), itm),
+                'orthophoto_path':  ortho_path,
+                "avg_coordinates": data,
+                "indexes": index_data
             })
-
-        parts = itm.split("_")
-        projects.append({
-            'name': parts[0],
-            'date': datetime.strptime(parts[1], "%d%m%Y%H%M%S").timestamp(),
-            'path': os.path.join(os.getcwd(), itm),
-            'orthophoto_path':  ortho_path,
-            "avg_coordinates": data,
-            "indexes": index_data
-        })
+        except Exception:
+            print('Could not open project at:', itm)
     return projects
 
 
