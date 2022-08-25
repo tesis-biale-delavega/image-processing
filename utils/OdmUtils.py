@@ -5,8 +5,8 @@ def get_multispectral_config(main_band):
         'skip-3dmodel': True,
         'skip-report': True,  # Can be useful
         'max-concurrency': 8,
-        'pc-quality': 'low',  # default is medium
-        'feature-quality': 'medium',  # default is high
+        'pc-quality': 'medium',  # default is medium
+        'feature-quality': 'high',  # default is high
         'dem-decimation': 10,  # default is 1
         'radiometric-calibration': 'camera',
         'primary-band': main_band,
@@ -23,8 +23,8 @@ def get_rgb_config():
         'skip-3dmodel': True,
         'skip-report': True,  # Can be useful
         'max-concurrency': 8,  # default is 4
-        'pc-quality': 'low',  # default is medium
-        'feature-quality': 'medium',  # default is high
+        'pc-quality': 'medium',  # default is medium
+        'feature-quality': 'high',  # default is high
         'dem-decimation': 10,  # default is 1
         'auto-boundary': True,
         'verbose': True,

@@ -160,12 +160,11 @@ def convert_single_channel_tif_to_png(img_path):
         dataset = gdal.Open(img)
         image = dataset.ReadAsArray()
         if image.shape[0] == 6:
-            green = cv2.merge([image[0], image[0], image[0], image[5]])
-            red = cv2.merge([image[1], image[1], image[1], image[5]])
-            reg = cv2.merge([image[2], image[2], image[2], image[5]])
-            nir = cv2.merge([image[3], image[3], image[3], image[5]])
-            blue = cv2.merge([image[4], image[4], image[4], image[5]])
-
+            green = cv2.merge([image[1], image[1], image[1], image[5]])
+            red = cv2.merge([image[2], image[2], image[2], image[5]])
+            reg = cv2.merge([image[3], image[3], image[3], image[5]])
+            nir = cv2.merge([image[4], image[4], image[4], image[5]])
+            blue = cv2.merge([image[0], image[0], image[0], image[5]])
             cv2.imwrite(img[:-4] + '_BLU.tif', blue)
         else:
             green = cv2.merge([image[0], image[0], image[0], image[4]])
