@@ -24,11 +24,11 @@ types = []
 
 def startup():
     containers = client.containers.list()
-    if not any((container.attrs['Config']['Image'] == 'opendronemap/nodeodm' or container.attrs['Config']['Image'] == 'opendronemap/nodeodm:gpu') for container in containers):
+    if not any((container.attrs['Config']['Image'] == 'opendronemap/nodeodm:2.8.7' or container.attrs['Config']['Image'] == 'opendronemap/nodeodm:gpu') for container in containers):
         if len(GPUtil.getGPUs()) > 0:
             subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "--gpus", "all", "opendronemap/nodeodm:gpu"])
         else:
-            subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "opendronemap/nodeodm"])
+            subprocess.Popen(["docker", "run", "-l", "image-processing-odm", "-ti", "-p", "3000:3000", "opendronemap/nodeodm:2.8.7"])
 
 
 def stop_odm():
