@@ -75,17 +75,24 @@ def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     result = {}
     paths = {}
     for index in indexes:
-        if not check_images_missing(Index[index].value, red, nir, reg, gre, blue, red_alternative, gre_alternative, blue_alternative):
-            val = get_index(index, check, red, nir, reg, gre, blue) if not only_rgb_index(Index[index].value) \
-                else get_index(index, alternative_check, red_alternative, nir, reg, gre_alternative, blue_alternative)
-            result[index] = val
+        if os.path.exists(project_path + '/index_' + index + '.png') and os.path.exists(project_path + '/index_' + index + '.npy'):
+            result[index] = None
             paths[index] = {
                 'img': project_path + '/index_' + index + '.png',
                 'vector': project_path + '/index_' + index + '.npy'
             }
         else:
-            result[index] = None
-            paths[index] = None
+            if not check_images_missing(Index[index].value, red, nir, reg, gre, blue, red_alternative, gre_alternative, blue_alternative):
+                val = get_index(index, check, red, nir, reg, gre, blue) if not only_rgb_index(Index[index].value) \
+                    else get_index(index, alternative_check, red_alternative, nir, reg, gre_alternative, blue_alternative)
+                result[index] = val
+                paths[index] = {
+                    'img': project_path + '/index_' + index + '.png',
+                    'vector': project_path + '/index_' + index + '.npy'
+                }
+            else:
+                result[index] = None
+                paths[index] = None
 
     for custom_index in custom_indexes:
         if not check_images_missing(custom_index['formula'], red, nir, reg, gre, blue, red_alternative, gre_alternative, blue_alternative):
