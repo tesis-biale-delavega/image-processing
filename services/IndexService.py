@@ -10,94 +10,64 @@ orthophoto_path = '/multispectral/odm_orthophoto/odm_orthophoto'
 rgb_orthophoto_path = '/rgb/odm_orthophoto/odm_orthophoto'
 
 
-def check_images_missing(index_formula, red, nir, reg, gre, blue, red_alternative, gre_alternative, blue_alternative):
+def check_images_missing(index_formula, red, nir, reg, gre, blue):
     red_missing = "red" in index_formula and red is None
     nir_missing = "nir" in index_formula and nir is None
     reg_missing = "reg" in index_formula and reg is None
     gre_missing = "gre" in index_formula and gre is None
     blue_missing = "blue" in index_formula and blue is None
 
-    index_rgb = only_rgb_index(index_formula)
-    rgb_missing = index_rgb and red_alternative is None and gre_alternative is None and blue_alternative is None
-
-    if index_rgb:
-        return rgb_missing
     return red_missing or nir_missing or reg_missing or gre_missing or blue_missing
 
 
 def calculate_index(project_path, indexes, custom_indexes, fig, ax):
     red_path = project_path + orthophoto_path + '_RED.tif'
-    red_alternative_path = project_path + rgb_orthophoto_path + '.tif'
     nir_path = project_path + orthophoto_path + '_NIR.tif'
     reg_path = project_path + orthophoto_path + '_REG.tif'
     gre_path = project_path + orthophoto_path + '_GRE.tif'
-    gre_alternative_path = project_path + rgb_orthophoto_path + '.tif'
     blue_path = project_path + orthophoto_path + '_BLU.tif'
-    blue_alternative_path = project_path + rgb_orthophoto_path + '.tif'
 
-    any_all_rgb_index = list(map(only_rgb_index, map(lambda x: Index[x].value, indexes))) + list(map(only_rgb_index, map(lambda x: x['formula'], custom_indexes)))
-    should_read_rgb = any_all_rgb_index.count(True) > 0
-    should_read_multispectral = any_all_rgb_index.count(False) > 0
-    red, nir, reg, gre, blue = None, None, None, None, None
-    check = None
+    print("reading multispectral images")
+    red_present, red_img = read_img(red_path)
+    nir_present, nir_img = read_img(nir_path)
+    reg_present, reg_img = read_img(reg_path)
+    gre_present, gre_img = read_img(gre_path)
+    blue_present, blue_img = read_img(blue_path)
 
-    red_alternative, gre_alternative, blue_alternative = None, None, None
-    alternative_check = None
+    red = convert_to_array(red_img, red_present)
+    nir = convert_to_array(nir_img, nir_present)
+    reg = convert_to_array(reg_img, reg_present)
+    gre = convert_to_array(gre_img, gre_present)
+    blue = convert_to_array(blue_img, blue_present)
 
-    if should_read_rgb:
-        print("reading rgb images")
-        red_alternative_present, red_alternative_img = read_img(red_alternative_path)
-        gre_alternative_present, gre_alternative_img = read_img(gre_alternative_path)
-        blue_alternative_present, blue_alternative_img = read_img(blue_alternative_path)
-
-        red_alternative = convert_to_array(red_alternative_img, red_alternative_present, 2)
-        gre_alternative = convert_to_array(gre_alternative_img, gre_alternative_present, 1)
-        blue_alternative = convert_to_array(blue_alternative_img, blue_alternative_present, 0)
-
-        alternative_check = np.logical_and.reduce(get_check(red_alternative, None, None, gre_alternative, blue_alternative))
-
-    if should_read_multispectral:
-        print("reading multispectral images")
-        red_present, red_img = read_img(red_path)
-        nir_present, nir_img = read_img(nir_path)
-        reg_present, reg_img = read_img(reg_path)
-        gre_present, gre_img = read_img(gre_path)
-        blue_present, blue_img = read_img(blue_path)
-
-        red = convert_to_array(red_img, red_present)
-        nir = convert_to_array(nir_img, nir_present)
-        reg = convert_to_array(reg_img, reg_present)
-        gre = convert_to_array(gre_img, gre_present)
-        blue = convert_to_array(blue_img, blue_present)
-
-        check = np.logical_and.reduce(get_check(red, nir, reg, gre, blue))
+    check = np.logical_and.reduce(get_check(red, nir, reg, gre, blue))
 
     result = {}
     paths = {}
     for index in indexes:
-        if os.path.exists(project_path + '/index_' + index + '.png') and os.path.exists(project_path + '/index_' + index + '.npy'):
+        index_png_path = project_path + '/index_' + index + '.png'
+        index_npy_path = project_path + '/index_' + index + '.npy'
+        if os.path.exists(index_png_path) and os.path.exists(index_npy_path):
             result[index] = None
             paths[index] = {
-                'img': project_path + '/index_' + index + '.png',
-                'vector': project_path + '/index_' + index + '.npy'
+                'img': index_png_path,
+                'vector': index_npy_path
             }
         else:
-            if not check_images_missing(Index[index].value, red, nir, reg, gre, blue, red_alternative, gre_alternative, blue_alternative):
-                val = get_index(index, check, red, nir, reg, gre, blue) if not only_rgb_index(Index[index].value) \
-                    else get_index(index, alternative_check, red_alternative, nir, reg, gre_alternative, blue_alternative)
+            if not check_images_missing(Index[index].value, red, nir, reg, gre, blue):
+                val = get_index(index, check, red, nir, reg, gre, blue)
                 result[index] = val
                 paths[index] = {
-                    'img': project_path + '/index_' + index + '.png',
-                    'vector': project_path + '/index_' + index + '.npy'
+                    'img': index_png_path,
+                    'vector': index_npy_path
                 }
             else:
                 result[index] = None
                 paths[index] = None
 
     for custom_index in custom_indexes:
-        if not check_images_missing(custom_index['formula'], red, nir, reg, gre, blue, red_alternative, gre_alternative, blue_alternative):
-            val = get_custom_index(custom_index['formula'], check, red, nir, reg, gre, blue) if not only_rgb_index(custom_index['formula']) \
-                else get_custom_index(custom_index['formula'], alternative_check, red_alternative, nir, reg, gre_alternative, blue_alternative)
+        if not check_images_missing(custom_index['formula'], red, nir, reg, gre, blue):
+            val = get_custom_index(custom_index['formula'], check, red, nir, reg, gre, blue)
             result[custom_index['name']] = val
             paths[custom_index['name']] = {
                     'img': project_path + '/index_' + custom_index['name'] + '.png',
