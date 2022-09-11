@@ -53,6 +53,14 @@ def list_projects():
     return projects
 
 
+def export_as_zip(files_path):
+    downloads_path = str(Path.home() / "Downloads")
+    file_name = os.path.basename(os.path.normpath(files_path))
+    file = os.path.join(downloads_path, file_name)
+    shutil.make_archive(file, 'zip', files_path)
+    return file + ".zip"
+
+
 def package_project(files_path):
     file_name = os.path.basename(os.path.normpath(files_path))
     print(file_name)
