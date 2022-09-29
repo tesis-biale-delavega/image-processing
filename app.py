@@ -57,9 +57,9 @@ def progress():
         while True:
             res, msg = odm_progress()
             if res is not None:
-                yield str(res)
+                yield str(res).replace("'", '"')
             else:
-                yield '{\'error\':' + msg + '}'
+                yield '{\"error\":' + '"' + msg + '"' + '}'
             sleep(5)
 
     return Response(stream(), mimetype='application/json')

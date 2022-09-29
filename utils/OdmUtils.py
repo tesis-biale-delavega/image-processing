@@ -23,9 +23,9 @@ def get_rgb_config():
         'skip-3dmodel': True,
         'skip-report': True,  # Can be useful
         'max-concurrency': 8,  # default is 4
-        'pc-quality': 'medium',  # default is medium
+        'pc-quality': 'high',  # default is medium
         'feature-quality': 'high',  # default is high
-        'dem-decimation': 10,  # default is 1
+        'dem-decimation': 5,  # default is 1
         'auto-boundary': True,
         'verbose': True,
         'debug': True

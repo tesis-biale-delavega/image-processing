@@ -15,6 +15,9 @@ import zipfile
 from pathlib import Path
 import requests
 import GPUtil
+import PIL
+from PIL import Image
+PIL.Image.MAX_IMAGE_PIXELS = 500000000
 
 
 client = docker.from_env()
@@ -111,6 +114,8 @@ def create_task(node, imgs, config, img_type, project_dir):
         unzip_file(zip_dir, final_dir)
         if img_type == 'multispectral':
             convert_single_channel_tif_to_png(final_dir + '/odm_orthophoto')
+        else:
+            create_thumbnails(final_dir)
     except Exception as exc:
         print('error saving results:', exc)
 
@@ -193,3 +198,10 @@ def unzip_file(file, output):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(output)
     os.remove(zip_file)
+
+
+def create_thumbnails(path):
+    rgb_folder = os.path.join(path, 'odm_orthophoto')
+    png_original = Image.open(os.path.join(rgb_folder, 'odm_orthophoto.png'))
+    png_original.thumbnail((200, 200))
+    png_original.save(os.path.join(rgb_folder, 'odm_orthophoto_thumb.png'))

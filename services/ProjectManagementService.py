@@ -23,7 +23,9 @@ def list_projects():
     for itm in project_dirs:
         try:
             ortho_path = os.path.join(os.getcwd(), itm, 'rgb', 'odm_orthophoto', 'odm_orthophoto.png')
+            ortho_thumb_path = os.path.join(os.getcwd(), itm, 'rgb', 'odm_orthophoto', 'odm_orthophoto_thumb.png')
             ortho_path = ortho_path if os.path.exists(ortho_path) else None
+            ortho_thumb_path = ortho_thumb_path if os.path.exists(ortho_thumb_path) else None
 
             data = None
             if os.path.exists(itm + '/avg_coordinates.json'):
@@ -45,6 +47,7 @@ def list_projects():
                 'date': datetime.strptime(parts[1], "%d%m%Y%H%M%S").timestamp(),
                 'path': os.path.join(os.getcwd(), itm),
                 'orthophoto_path':  ortho_path,
+                'orthophoto_thumb_path': ortho_thumb_path,
                 "avg_coordinates": data,
                 "indexes": index_data
             })
