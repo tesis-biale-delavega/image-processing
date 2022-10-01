@@ -21,8 +21,9 @@ def avg_coords(img_paths, output_path):
         'avg_rgb_alt': avg_rgb_alt,
         'rgb_points': rgb_points
     }
-    with open(output_path + '/avg_coordinates.json', 'w') as f:
-        json.dump(data, f)
+    if output_path:
+        with open(output_path + '/avg_coordinates.json', 'w') as f:
+            json.dump(data, f)
     return data
 
 

@@ -48,7 +48,11 @@ def start_analysis():
 
 @app.post('/coords')
 def coords():
-    return avg_coords(request.get_json()['path'], request.get_json()['output_path'])
+    try:
+        out = request.get_json()['output_path']
+    except KeyError:
+        out = None
+    return avg_coords(request.get_json()['path'], out)
 
 
 @app.get('/progress')
