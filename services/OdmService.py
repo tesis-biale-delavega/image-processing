@@ -164,8 +164,8 @@ def convert_single_channel_tif_to_png(img_path):
     for img in multispectral:
         dataset = gdal.Open(img)
         image = dataset.ReadAsArray()
-        width = int(image[1].shape[1] * 50 / 100)
-        height = int(image[1].shape[0] * 50 / 100)
+        width = int(image[1].shape[1] * 30 / 100)
+        height = int(image[1].shape[0] * 30 / 100)
         dim = (width, height)
         im0 = cv2.resize(image[0], dim, interpolation=cv2.INTER_AREA)
         im1 = cv2.resize(image[1], dim, interpolation=cv2.INTER_AREA)
