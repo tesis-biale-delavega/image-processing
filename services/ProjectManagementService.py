@@ -5,6 +5,7 @@ from pathlib import Path
 import zipfile
 import json
 import glob
+import requests
 
 
 def create_project_dir(name):
@@ -73,6 +74,13 @@ def package_project(files_path):
     p = Path(file + '.zip')
     p.rename(p.with_suffix('.dip'))
     return file + ".dip"
+
+
+def download_dip(url, file_name):
+    response = requests.get(url)
+    open(file_name, "wb").write(response.content)
+    extract_project(os.getcwd() + "/" + file_name)
+    return 'ok'
 
 
 def extract_project(files_path):

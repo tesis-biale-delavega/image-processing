@@ -6,7 +6,7 @@ from services.OdmService import startup, stop_odm, odm_running, start_odm, odm_p
 from services.CoordsService import avg_coords
 from services.ImageClassifier import classify_images
 from services.IndexService import calculate_index, get_zone_above_threshold
-from services.ProjectManagementService import list_projects, package_project, extract_project, export_as_zip
+from services.ProjectManagementService import list_projects, package_project, extract_project, export_as_zip, download_dip
 import signal
 import sys
 from time import sleep
@@ -122,6 +122,11 @@ def export_zip():
 @app.post('/extract')
 def extract():
     return extract_project(request.get_json()['path'])
+
+
+@app.post('/download-dip')
+def download():
+    return download_dip(request.get_json()['projectUrl'], request.get_json()['fileName'])
 
 
 if __name__ == '__main__':
