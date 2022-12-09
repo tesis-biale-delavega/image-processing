@@ -35,9 +35,10 @@ def list_projects():
             index_data = []
             for img in glob.glob(itm + "/*.png"):
                 img_parts = img.split("_")
+                thresh_parts = img.split("threshold")
                 index_data.append({
                     'path': os.path.join(os.getcwd(), img),
-                    'index': img_parts[len(img_parts) - 1][:-4],
+                    'index': img_parts[len(img_parts) - 1][:-4] if len(thresh_parts) <= 1 else str(img_parts[len(img_parts) - 4][:-1] + '_' + img_parts[len(img_parts) - 2] + '-' + img_parts[len(img_parts) - 1][:-4]),
                     'vector': os.path.join(os.getcwd(), img[:-3] + 'npy')
                 })
 
