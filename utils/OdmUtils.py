@@ -11,7 +11,8 @@ def get_multispectral_config(main_band):
         'radiometric-calibration': 'camera',
         'primary-band': main_band,
         'verbose': True,
-        'debug': True
+        'debug': True,
+        'min-num-features': 5000
     }
 
 
@@ -28,5 +29,6 @@ def get_rgb_config():
         'dem-decimation': 5,  # default is 1
         'auto-boundary': True,
         'verbose': True,
-        'debug': True
+        'debug': True,
+        'min-num-features': 5000
     }
