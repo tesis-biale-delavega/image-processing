@@ -55,7 +55,12 @@ def list_projects():
             })
         except Exception:
             print('Could not open project at:', itm)
+    projects.sort(key=get_date, reverse=True)
     return projects
+
+
+def get_date(project):
+    return project.get('date')
 
 
 def export_as_zip(files_path):
