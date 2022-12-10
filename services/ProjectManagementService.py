@@ -68,11 +68,11 @@ def export_as_zip(files_path):
 
 def package_project(files_path):
     file_name = os.path.basename(os.path.normpath(files_path))
-    print(file_name)
     file = os.getcwd() + "/" + file_name
-    shutil.make_archive(file, 'zip', files_path)
-    p = Path(file + '.zip')
-    p.rename(p.with_suffix('.dip'))
+    if not os.path.exists(file + '.dip'):
+        shutil.make_archive(file, 'zip', files_path)
+        p = Path(file + '.zip')
+        p.rename(p.with_suffix('.dip'))
     return file + ".dip"
 
 
