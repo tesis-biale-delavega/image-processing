@@ -152,8 +152,9 @@ def create_heatmap(arr: np.ndarray, output, save, dpi, fig, ax, min_val=-1, max_
 def get_zone_above_threshold(src, threshold_max, threshold_min, fig, ax):
     out = src[:-3] + '_threshold_' + str(threshold_min) + '_' + str(threshold_max) + '.png'
     array = numpy.load(src)
-    array[array >= threshold_max] = 0
-    array[array <= threshold_min] = 0
+    array[array == 0] = -999
+    array[array >= threshold_max] = -999
+    array[array <= threshold_min] = -999
     array[(array > threshold_min) & (array < threshold_max)] = 1
     create_heatmap(array, out, True, 3000, fig, ax, min_val=1, max_val=1)
     return out
